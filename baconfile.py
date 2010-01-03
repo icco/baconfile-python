@@ -15,6 +15,7 @@ if sys.version_info < (2,6,):
 else:
   import json
 
+config_file = os.getenv("HOME") + '/.baconfile'
 baconfile_url = 'http://baconfile.com/'
 
 """Baconfile library"""
@@ -129,14 +130,20 @@ def show_help(page=''):
     print '    fetch  -  download a file from baconfile.com'
     print '    ls     -  list infomation about files/folders'
     print '    recent -  list most recently added files'
+    print '    mkdir  -  create a new folder'
     print 'Type just the command name to get more infomation.'
 
 # query user for username and password
 def get_credentials():
-  print 'Baconfile.com login credentials required.:'
-  print 'Username: ',
-  username = raw_input()
-  password = getpass()
+  if os.path.isfile(config_file):
+    f = open(config_file)
+    username = f.readline().rstrip()
+    password = f.readline().rstrip()
+  else:
+    print 'Baconfile.com login credentials required.:'
+    print 'Username: ',
+    username = raw_input()
+    password = getpass()
   return username, password
 
 def print_items(items):
