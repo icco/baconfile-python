@@ -95,8 +95,19 @@ def new_folder(credentials, folder_name):
   item = json.loads(r.read())
   return FolderItem(item)
 
-"""Baconfile commandline"""
+def new_file(credentials, file_path):
+  headers = _build_headers(credentials)
+  if os.path.isfile(file_path):
+    f = open(file_path)
+    data = urllib.urlencode({'file': f.read()})
+    print data
+    r = _make_request(baconfile_url + credentials[0] + '.json', data, headers)
+    item = json.loads(r.read())
+    return FolderItem(item)
+  else:
+    raise BaconfileError('File does not exist')
 
+"""Baconfile commandline"""
 def show_help(page=''):
   if page == 'fetch':
     print 'Download a file from baconfile.com'
@@ -122,6 +133,12 @@ def show_help(page=''):
     print 'Usage: mkdir <folder>'
     print '    folder -  path + folder name'
     print 'Example: baconfile mkdir docs/papers'
+    print ''
+  elif page == 'put':
+    print 'upload a file to baconfile.com'
+    print 'Usage: put <file>'
+    print '    file   -  path to file you want to upload'
+    print 'Example: baconfile put image.png'
     print ''
   else:
     print 'Baconfile commandline tool'
@@ -188,6 +205,13 @@ def cmd_mkdir(folder_name):
     print e
     exit(1)
 
+def cmd_put(file_path):
+  try:
+    new_file(get_credentials(), file_path)
+  except BaconfileError, e:
+    print e
+    exit(1)
+
 if __name__ == '__main__':
   # Get command and args
   if len(sys.argv) < 2:
@@ -206,6 +230,8 @@ if __name__ == '__main__':
       cmd_recent()
     elif command == 'mkdir':
       cmd_mkdir(*args)
+    elif command == 'put':
+      cmd_put(*args)
     else:
       print '%s invalid command!' % command
       show_help()
