@@ -5,6 +5,8 @@
 
 import urllib
 import urllib2
+import mimetypes
+import stat
 import base64
 import os, sys
 from datetime import datetime
@@ -58,6 +60,9 @@ def _build_url(username, path):
 def _make_request(url, data=None, headers={}):
   try:
     headers['User-Agent'] = 'baconfilepy/1.0'
+ #   print url
+ #   print data
+ #   print headers
     req = urllib2.Request(url, data, headers)
     return urllib2.urlopen(req)
   except urllib2.HTTPError, e:
@@ -99,13 +104,14 @@ def new_file(credentials, file_path):
   headers = _build_headers(credentials)
   if os.path.isfile(file_path):
     f = open(file_path)
-    data = urllib.urlencode({'file': f.read()})
-    print data
+    headers['Content-Type'] = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+    headers['Content-Size'] = os.fstat(f.fileno())[stat.ST_SIZE]
+    data = urllib.urlencode({'file': '@' + file_path})
     r = _make_request(baconfile_url + credentials[0] + '.json', data, headers)
     item = json.loads(r.read())
     return FolderItem(item)
   else:
-    raise BaconfileError('File does not exist')
+    raise BaconfileError(file_path + ' does not exist')
 
 """Baconfile commandline"""
 def show_help(page=''):
